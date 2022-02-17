@@ -19,15 +19,18 @@ EPoller::~EPoller()
 void EPoller::poll(int timeoutMs)
 {
     int numEvents = epoll_wait(epfd, &*revents.begin(), kInitREventsSize, timeoutMs);
-    std::cout << "numEvents=" << numEvents << ", revents.size=" << revents.size() << std::endl;
     if (numEvents > 0)
     {
         for (int i = 0; i < numEvents; i++) {
+            std::cout << "i=" << i << ", numEvents=" << numEvents << std::endl;
             int fd = revents[i].data.fd;
-            std::cout << "map count: " << channelMap.count(fd) << std::endl;
             Channel* channel = channelMap[fd];
-            std::cout << "channel->fd=" << channel->fd << ", fd=" << fd << std::endl;
             assert(channel->fd == fd);
+            if ((revents[i].events & EPOLLERR) || (revents[i].events & EPOLLHUP))
+            {
+                std::cout << "epoll error" << std::endl;
+                continue;
+            }
             if (revents[i].events & EPOLLIN) {
                 channel->readCallback(channel->data);
             }
@@ -46,7 +49,6 @@ void EPoller::addChannel(Channel* channel)
     event.events = channel->events;
     
     channelMap[channel->fd] = channel;
-    std::cout << "fd mapped: " << channel->fd << ", " << channelMap[channel->fd]->fd << std::endl;
     epoll_ctl(epfd, EPOLL_CTL_ADD, channel->fd, &event);
     
 

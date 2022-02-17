@@ -10,3 +10,6 @@ target_link_libraries(test_loop2 mylib)
 
 add_executable(test_reactor test_reactor.cpp)
 target_link_libraries(test_reactor mylib)
+
+add_executable(single_reactor_epoll_server single_reactor_epoll_server.cpp)
+target_link_libraries(single_reactor_epoll_server mylib)

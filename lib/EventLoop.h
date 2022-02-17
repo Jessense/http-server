@@ -15,6 +15,7 @@ private:
     bool quit;
     std::unique_ptr<EPoller> epoller;
 public:
+    static const int kEPollTimeoutMs = 10000;
     EventLoop();
     ~EventLoop();
     void loop();

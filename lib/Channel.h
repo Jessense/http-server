@@ -5,20 +5,23 @@
 
 #include <functional>
 
-typedef std::function<void()> Callback;
+typedef int (*EventReadCallback)(void *data);
+typedef int (*EventWriteCallback)(void *data);
+
 class Channel
 {
 public:
     int fd;
     int events;
     EventLoop* ownerLoop;
-    Callback readCallback;
-    Callback writeCallback;
+    EventReadCallback readCallback;
+    EventWriteCallback writeCallback;
+    void *data;
 public:
     Channel(int _fd, EventLoop* loop);
     ~Channel();
     void handleEvent();
-    void setReadCallback(const Callback& cb);
+    void setReadCallback(EventReadCallback cb, void* data);
 };
 
 

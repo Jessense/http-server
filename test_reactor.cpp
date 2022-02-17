@@ -7,10 +7,11 @@
 
 EventLoop* g_loop;
 
-void timeout()
+int timeout(void *data)
 {
     std::cout << "timeout!" << std::endl;
     g_loop->quitLoop();
+    return 0;
 }
 
 int main(int argc, char const *argv[])
@@ -19,7 +20,7 @@ int main(int argc, char const *argv[])
     g_loop = &loop;
     int timerfd = timerfd_create(CLOCK_MONOTONIC, TFD_NONBLOCK | TFD_CLOEXEC);
     Channel channel(timerfd, &loop);
-    channel.setReadCallback(timeout);
+    channel.setReadCallback(timeout, NULL);
 
     struct itimerspec spec =
     {

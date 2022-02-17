@@ -31,12 +31,11 @@ int handleRead(void* data)
     int connect_fd = *((int*)data);
     std::cout << "message from " << connect_fd << std::endl;
     int n;
-    while (1)
+    while (true)
     {
         char buf[512];
-        if (n = read(connect_fd, buf, sizeof(buf)) > 0) 
+        if ((n = read(connect_fd, buf, 512)) > 0) 
         {
-            std::cout << "n=" << n << std::endl;
             for (int i = 0; i < n; i++) 
             {
                 buf[i] = rot13_char(buf[i]);
@@ -52,9 +51,11 @@ int handleRead(void* data)
         } 
         else //TODO: 处理读完/出错 连接关闭
         {
-            std::cout << "read error" << std::endl;
+            if (errno != EAGAIN) // EAGAIN 属于非阻塞 read 的正常结束？
+                std::cout << "read error" << std::endl;
             break;
-        }        
+        }
+        
     }
     return 0;
 }
@@ -68,7 +69,7 @@ int handleConnectionEstablished(void* data)
     sockaddr_in client_addr;
     socklen_t client_len = sizeof(client_addr);
     int connect_fd = accept(listen_fd, (sockaddr*) &client_addr, &client_len); //TODO:这三行可以封装到 Acceptor
-    fcntl(listen_fd, F_SETFL, O_NONBLOCK);
+    fcntl(connect_fd, F_SETFL, O_NONBLOCK);
     Channel* channel = new Channel(connect_fd, tcpServer->eventLoop);
     int* connfd = new int;
     *connfd = connect_fd;

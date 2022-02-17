@@ -7,3 +7,6 @@ target_link_libraries(test_loop mylib)
 
 add_executable(test_loop2 test_loop2.cpp)
 target_link_libraries(test_loop2 mylib)
+
+add_executable(test_reactor test_reactor.cpp)
+target_link_libraries(test_reactor mylib)

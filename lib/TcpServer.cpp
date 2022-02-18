@@ -26,9 +26,17 @@ char rot13_char(char c) {
         return c;
 }
 
+int handleConnectionClosed(void* data)
+{
+    Channel* channel = (Channel*)data;
+    channel->ownerLoop->removeChannel(channel);
+    return 0;
+}
+
 int handleRead(void* data)
 {
-    int connect_fd = *((int*)data);
+    Channel* channel = (Channel*)data;
+    int connect_fd = channel->fd;
     std::cout << "message from " << connect_fd << std::endl;
     int n;
     while (true)
@@ -44,9 +52,10 @@ int handleRead(void* data)
                 std::cout << "write error" << std::endl;
             }
         }
-        else if (n == 0)
+        else if (n == 0) //对端发送了 FIN 要关闭连接
         {
-            std::cout << "read finished" << std::endl;
+            std::cout << "peer FIN" << std::endl;
+            handleConnectionClosed(channel);
             break;
         } 
         else //TODO: 处理读完/出错 连接关闭
@@ -71,9 +80,7 @@ int handleConnectionEstablished(void* data)
     int connect_fd = accept(listen_fd, (sockaddr*) &client_addr, &client_len); //TODO:这三行可以封装到 Acceptor
     fcntl(connect_fd, F_SETFL, O_NONBLOCK);
     Channel* channel = new Channel(connect_fd, tcpServer->eventLoop);
-    int* connfd = new int;
-    *connfd = connect_fd;
-    channel->setReadCallback(handleRead, connfd);
+    channel->setReadCallback(handleRead, channel);
     
     std::cout << "new connection: " << connect_fd << std::endl;
 

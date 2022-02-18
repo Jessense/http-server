@@ -25,6 +25,7 @@ public:
     ~EPoller();
     void poll(int timeoutMs);
     void addChannel(Channel* channel);
+    void removeFd(int fd);
 };
 
 

@@ -50,6 +50,10 @@ void EPoller::addChannel(Channel* channel)
     
     channelMap[channel->fd] = channel;
     epoll_ctl(epfd, EPOLL_CTL_ADD, channel->fd, &event);
-    
+}
 
+void EPoller::removeFd(int fd)
+{
+    channelMap.erase(fd);
+    epoll_ctl(epfd, EPOLL_CTL_DEL, fd, NULL);
 }

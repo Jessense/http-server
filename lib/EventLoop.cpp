@@ -40,3 +40,8 @@ void EventLoop::quitLoop()
 {
     quit = true;
 }
+
+void EventLoop::removeChannel(Channel* channel)
+{
+    epoller->removeFd(channel->fd);
+}

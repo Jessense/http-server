@@ -21,6 +21,7 @@ public:
     void loop();
     void quitLoop();
     void addChannel(Channel* channel);
+    void removeChannel(Channel* channel);
 };
 
 

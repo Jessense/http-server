@@ -1,5 +1,5 @@
-#ifndef EVENTLOOP_H
-#define EVENTLOOP_H
+#ifndef EVENT_LOOP_H
+#define EVENT_LOOP_H
 
 #include<thread>
 #include<vector>
@@ -22,6 +22,8 @@ public:
     void quitLoop();
     void addChannel(Channel* channel);
     void removeChannel(Channel* channel);
+
+    std::thread::id getTid() const {return tid;}
 };
 
 

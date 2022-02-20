@@ -7,7 +7,7 @@
 
 
 EventLoop::EventLoop()
-    : tid(pthread_self()), 
+    : tid(std::this_thread::get_id()), 
       looping(false),
       quit(false),
       epoller(new EPoller(this))
@@ -28,7 +28,7 @@ void EventLoop::loop()
     assert(!looping);
     assert(tid == std::this_thread::get_id());
     looping = true;
-    
+    std::cout << "started loop in thread " << std::this_thread::get_id() << std::endl;
     while (!quit) {
         epoller->poll(kEPollTimeoutMs);
     }

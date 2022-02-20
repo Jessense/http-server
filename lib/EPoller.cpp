@@ -22,7 +22,6 @@ void EPoller::poll(int timeoutMs)
     if (numEvents > 0)
     {
         for (int i = 0; i < numEvents; i++) {
-            std::cout << "i=" << i << ", numEvents=" << numEvents << std::endl;
             int fd = revents[i].data.fd;
             Channel* channel = channelMap[fd];
             assert(channel->fd == fd);

@@ -18,11 +18,6 @@ EventLoop::~EventLoop()
 {
 }
 
-void EventLoop::addChannel(Channel* channel)
-{
-    epoller->addChannel(channel);
-}
-
 void EventLoop::loop()
 {
     assert(!looping);
@@ -41,7 +36,19 @@ void EventLoop::quitLoop()
     quit = true;
 }
 
+void EventLoop::addChannel(Channel* channel)
+{
+    epoller->addChannel(channel);
+}
+
+void EventLoop::modifyChannel(Channel* channel)
+{
+    epoller->modifyChannel(channel);
+}
+
 void EventLoop::removeChannel(Channel* channel)
 {
     epoller->removeFd(channel->fd);
 }
+
+

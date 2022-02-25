@@ -1,12 +1,13 @@
 #ifndef EVENT_LOOP_H
 #define EVENT_LOOP_H
 
+#include "Channel.h"
+#include "EPoller.h"
+
 #include<thread>
 #include<vector>
 #include<map>
 
-class Channel;
-class EPoller;
 class EventLoop
 {
 private:
@@ -21,7 +22,8 @@ public:
     void loop();
     void quitLoop();
     void addChannel(Channel* channel);
-    void removeChannel(Channel* channel);
+    void modifyChannel(Channel* channel);
+    void removeChannel(Channel* channel); 
 
     std::thread::id getTid() const {return tid;}
 };

@@ -1,4 +1,4 @@
-#include "EPoller.h"
+#include "EventLoop.h"
 
 #include <iostream>
 #include <assert.h>
@@ -49,6 +49,16 @@ void EPoller::addChannel(Channel* channel)
     
     channelMap[channel->fd] = channel;
     epoll_ctl(epfd, EPOLL_CTL_ADD, channel->fd, &event);
+}
+
+void EPoller::modifyChannel(Channel* channel)
+{
+    epoll_event event;
+    event.data.fd = channel->fd;
+    event.events = channel->events;
+    
+    channelMap[channel->fd] = channel;
+    epoll_ctl(epfd, EPOLL_CTL_MOD, channel->fd, &event);    
 }
 
 void EPoller::removeFd(int fd)

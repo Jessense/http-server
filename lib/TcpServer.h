@@ -3,6 +3,7 @@
 
 #include "ThreadPool.h"
 #include "Acceptor.h"
+#include "TcpConnection.h"
 
 class TcpServer
 {
@@ -12,8 +13,9 @@ public:
     Acceptor* acceptor;
     int threadNum;
     ThreadPool* threadPool;
+    MessageCallback messageCallback;
 public:
-    TcpServer(int port_, int threadNum_=0);
+    TcpServer(int port_, MessageCallback messageCallback_, int threadNum_=0);
     ~TcpServer();
     void start();
 

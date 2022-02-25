@@ -6,8 +6,9 @@
 #include <fcntl.h>
 #include <iostream>
 
-TcpServer::TcpServer(int port_, int threadNum_)
+TcpServer::TcpServer(int port_, MessageCallback messageCallback_,int threadNum_)
     : port(port_),
+      messageCallback(messageCallback_),
       eventLoop(new EventLoop()),
       acceptor(new Acceptor(port_)),
       threadNum(threadNum_),
@@ -19,14 +20,7 @@ TcpServer::~TcpServer()
 {
 }
 
-char rot13_char(char c) {
-    if ((c >= 'a' && c <= 'm') || (c >= 'A' && c <= 'M'))
-        return c + 13;
-    else if ((c >= 'n' && c <= 'z') || (c >= 'N' && c <= 'Z'))
-        return c - 13;
-    else
-        return c;
-}
+
 
 int handleConnectionClosed(void* data)
 {
@@ -35,46 +29,6 @@ int handleConnectionClosed(void* data)
     return 0;
 }
 
-int handleRead(void* data)
-{
-    Channel* channel = (Channel*)data;
-    int connect_fd = channel->fd;
-    int n;
-    while (true)
-    {
-        char buf[512];
-        if ((n = read(connect_fd, buf, 512)) > 0) 
-        {
-            std::string s = "";
-            for (int i = 0; i < n-1; i++) {
-                s += buf[i];
-            }
-            std::cout << std::this_thread::get_id() << " : " << connect_fd << " : " << s << std::endl;
-            for (int i = 0; i < n; i++) 
-            {
-                buf[i] = rot13_char(buf[i]);
-            }
-            if (write(connect_fd, buf, n) < 0) {
-                std::cout << std::this_thread::get_id() << " : " << connect_fd << " : write error" << std::endl;
-            }
-            
-        }
-        else if (n == 0) //对端发送了 FIN 要关闭连接
-        {
-            std::cout << std::this_thread::get_id() << " : " << connect_fd << " : FIN" << std::endl;
-            handleConnectionClosed(channel);
-            break;
-        } 
-        else //TODO: 处理读完/出错 连接关闭
-        {
-            if (errno != EAGAIN) // EAGAIN 属于非阻塞 read 的正常结束？
-                std::cout << std::this_thread::get_id() << " : " << connect_fd << " : read error" << std::endl;
-            break;
-        }
-        
-    }
-    return 0;
-}
 
 int handleConnectionEstablished(void* data)
 {
@@ -88,8 +42,9 @@ int handleConnectionEstablished(void* data)
     fcntl(connect_fd, F_SETFL, O_NONBLOCK);
 
     EventLoop* subLoop = tcpServer->threadPool->getNextLoop();
-    Channel* channel = new Channel(connect_fd, subLoop);
-    channel->setReadCallback(handleRead, channel);
+
+    TcpConnection *tcpConnection = new TcpConnection(connect_fd, subLoop, tcpServer->messageCallback);
+    
     
     std::cout << subLoop->getTid() << " : " << connect_fd << " : new connection" << std::endl;
 
@@ -101,7 +56,6 @@ void TcpServer::start()
     threadPool->start();
 
     std::cout << "listen fd = " << acceptor->listen_fd << std::endl;
-    Channel* channel = new Channel(acceptor->listen_fd, eventLoop);
-    channel->setReadCallback(handleConnectionEstablished, this);
+    Channel* channel = new Channel(acceptor->listen_fd, EPOLLIN, eventLoop, handleConnectionEstablished, NULL, this);
     eventLoop->loop();
 }

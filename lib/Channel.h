@@ -1,12 +1,12 @@
 #ifndef CHANNEL_H
 #define CHANNEL_H
 
-#include "EventLoop.h"
-
 #include <functional>
 
 typedef int (*EventReadCallback)(void *data);
 typedef int (*EventWriteCallback)(void *data);
+
+class EventLoop;
 
 class Channel
 {
@@ -18,10 +18,16 @@ public:
     EventWriteCallback writeCallback;
     void *data;
 public:
-    Channel(int _fd, EventLoop* loop);
+    Channel(int fd_, int events_, EventLoop* loop, EventReadCallback readCallback, EventWriteCallback writeCallback, void* data);
     ~Channel();
     void handleEvent();
-    void setReadCallback(EventReadCallback cb, void* data);
+    void enableRead();
+    void disableRead();
+    void enableWrite();
+    void disableWrite();
+    bool writeEnabled();
+    void update();
+    void deregister();
 };
 
 

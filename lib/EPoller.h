@@ -1,8 +1,6 @@
 #ifndef EPOLLER_H
 #define EPOLLER_H
 
-#include "Channel.h"
-
 #include <vector>
 #include <map>
 #include <sys/epoll.h>
@@ -10,6 +8,7 @@
 typedef std::vector<epoll_event> EventList;
 typedef std::map<int, Channel*> ChannelMap;
 
+class Channel;
 class EventLoop;
 
 class EPoller
@@ -25,6 +24,8 @@ public:
     ~EPoller();
     void poll(int timeoutMs);
     void addChannel(Channel* channel);
+    void modifyChannel(Channel* channel);
+
     void removeFd(int fd);
 };
 

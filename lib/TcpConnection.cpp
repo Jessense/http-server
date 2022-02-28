@@ -1,19 +1,23 @@
 #include "TcpConnection.h"
+#include "TcpServer.h"
+#include "HttpRequest.h"
+#include "HttpResponse.h"
 
 #include <iostream>
 #include <unistd.h>
-
-int handleRead(void *data);
-int handleWrite(void *data);
+#include <sys/socket.h>
 
 TcpConnection::TcpConnection(int connectFd_, EventLoop* eventLoop_, MessageCallback messageCallback_)
     : eventLoop(eventLoop_), 
-      channel(new Channel(connectFd_, EPOLLIN, eventLoop, handleRead, handleWrite, this)),
       messageCallback(messageCallback_),
       inputBuffer(new Buffer()),
-      outputBuffer(new Buffer())
+      outputBuffer(new Buffer()),
+      channel(new Channel(connectFd_, EPOLLIN, eventLoop, handleRead, handleWrite, this))
 {
+    std::cout << "inputBuffer=" << inputBuffer <<std::endl;
+    std::cout << "outputBuffer=" << outputBuffer <<std::endl;
 }
+
 
 TcpConnection::~TcpConnection()
 {
@@ -24,14 +28,16 @@ int TcpConnection::send()
     return handleWrite(this);
 }
 
-void TcpConnection::close()
+int TcpConnection::close()
 {
     channel->deregister();
+    return shutdown(channel->fd, SHUT_WR);
 }
+
 
 int handleRead(void *data)
 {
-    TcpConnection* tcpConnection = (TcpConnection*)data;
+    TcpConnection* tcpConnection = static_cast<TcpConnection*>(data);
     Buffer* inputBuffer = tcpConnection->inputBuffer;
     Channel* channel = tcpConnection->channel;
 

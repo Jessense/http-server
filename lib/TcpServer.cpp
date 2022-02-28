@@ -1,5 +1,6 @@
 #include "TcpServer.h"
 #include "Channel.h"
+#include "HttpServer.h"
 
 #include <netinet/in.h> /* sockaddr_in */
 #include <unistd.h> /* read write */
@@ -16,17 +17,26 @@ TcpServer::TcpServer(int port_, MessageCallback messageCallback_,int threadNum_)
 {
 }
 
+
 TcpServer::~TcpServer()
 {
 }
 
 
 
-int handleConnectionClosed(void* data)
+TcpConnection* TcpServer::createConnection(int connectFd, EventLoop* subLoop)
 {
-    Channel* channel = (Channel*)data;
-    channel->ownerLoop->removeChannel(channel);
-    return 0;
+    TcpConnection *tcpConnection = new TcpConnection(connectFd, subLoop, this->messageCallback);
+    return tcpConnection;
+}
+
+void TcpServer::start()
+{
+    threadPool->start();
+
+    std::cout << "listen fd = " << acceptor->listen_fd << std::endl;
+    Channel* channel = new Channel(acceptor->listen_fd, EPOLLIN, eventLoop, handleConnectionEstablished, NULL, this);
+    eventLoop->loop();
 }
 
 
@@ -42,20 +52,16 @@ int handleConnectionEstablished(void* data)
     fcntl(connect_fd, F_SETFL, O_NONBLOCK);
 
     EventLoop* subLoop = tcpServer->threadPool->getNextLoop();
-
-    TcpConnection *tcpConnection = new TcpConnection(connect_fd, subLoop, tcpServer->messageCallback);
     
+    TcpConnection* tcpConnection = tcpServer->createConnection(connect_fd, subLoop);
     
     std::cout << subLoop->getTid() << " : " << connect_fd << " : new connection" << std::endl;
-
     return 0;
 }
 
-void TcpServer::start()
+int handleConnectionClosed(void* data)
 {
-    threadPool->start();
-
-    std::cout << "listen fd = " << acceptor->listen_fd << std::endl;
-    Channel* channel = new Channel(acceptor->listen_fd, EPOLLIN, eventLoop, handleConnectionEstablished, NULL, this);
-    eventLoop->loop();
+    Channel* channel = (Channel*)data;
+    channel->ownerLoop->removeChannel(channel);
+    return 0;
 }

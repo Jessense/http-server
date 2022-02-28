@@ -4,3 +4,6 @@ add_subdirectory(lib)
 
 add_executable(main_sub_reactors_epoll_server main_sub_reactors_epoll_server.cpp)
 target_link_libraries(main_sub_reactors_epoll_server mylib)
+
+add_executable(http_server_test http_server_test.cpp)
+target_link_libraries(http_server_test mylib)

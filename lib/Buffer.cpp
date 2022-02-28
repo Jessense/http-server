@@ -3,6 +3,10 @@
 #include <stdlib.h>
 #include <sys/uio.h>
 #include <string.h>
+#include <iostream>
+
+const char *CRLF = "\r\n";
+
 Buffer::Buffer()
 {
     data = (char*)malloc(sizeof(kInitBufferSize));
@@ -41,13 +45,21 @@ void Buffer::makeRoom(int size)
 }
 
 /** 将 data 中的数据（大小size）append到 buffer 中 */
-int Buffer::append(char* data, int size)
+int Buffer::append(char* data_, int size)
 {
-    if (data != NULL) {
+    if (data_ != NULL) {
         makeRoom(size);
-        memcpy(data+writeIndex, data, size);
+        memcpy(data+writeIndex, data_, size);
         writeIndex += size;
     }
+    return 0;
+}
+
+int Buffer::appendString(std::string s)
+{
+    char* temp = new char[s.size()+1];
+    strcpy(temp, s.c_str());
+    append(temp, s.size());
     return 0;
 }
 
@@ -60,7 +72,7 @@ int Buffer::appendChar(char c)
 
 int Buffer::readSocket(int fd)
 {
-    char additionalBuffer[kInitBufferSize];
+    char *additionalBuffer = new char[kInitBufferSize];
     iovec vec[2];
     int writeable = writeableSize();
     vec[0].iov_base = data + writeIndex;
@@ -82,4 +94,11 @@ int Buffer::readSocket(int fd)
         append(additionalBuffer, wrote-writeable);
     }
     return wrote;
+}
+
+char* Buffer::findCRLF()
+{
+    char *crlf = (char*)memmem(data + readIndex, readableSize(), CRLF, 2);
+    return crlf;
+
 }

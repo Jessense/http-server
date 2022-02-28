@@ -4,6 +4,7 @@
 #include "EventLoop.h"
 #include "Buffer.h"
 
+class TcpServer;
 class TcpConnection;
 
 typedef int (*MessageCallback)(TcpConnection* tcpConnection);
@@ -16,16 +17,19 @@ public:
     Buffer* inputBuffer;
     Buffer* outputBuffer;
     MessageCallback messageCallback;
-    void* data;
+
+
 
 public:
     TcpConnection(int connectFd, EventLoop* eventLoop, MessageCallback messageCallback);
+    TcpConnection(){};
     ~TcpConnection();
     int send();
-    void close();
+    int close();
 };
 
-
+int handleRead(void *data);
+int handleWrite(void *data);
 
 
 #endif

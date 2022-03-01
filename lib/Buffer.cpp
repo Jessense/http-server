@@ -9,7 +9,7 @@ const char *CRLF = "\r\n";
 
 Buffer::Buffer()
 {
-    data = (char*)malloc(sizeof(kInitBufferSize));
+    data = (char*)malloc(kInitBufferSize);
     totalSize = kInitBufferSize;
     readIndex = 0;
     writeIndex = 0;

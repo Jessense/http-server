@@ -26,6 +26,7 @@ TcpServer::~TcpServer()
 
 TcpConnection* TcpServer::createConnection(int connectFd, EventLoop* subLoop)
 {
+    std::cout << subLoop->getTid() << " : " << connectFd << " : new tcp connection" << std::endl;
     TcpConnection *tcpConnection = new TcpConnection(connectFd, subLoop, this->messageCallback);
     return tcpConnection;
 }
@@ -55,7 +56,7 @@ int handleConnectionEstablished(void* data)
     
     TcpConnection* tcpConnection = tcpServer->createConnection(connect_fd, subLoop);
     
-    std::cout << subLoop->getTid() << " : " << connect_fd << " : new connection" << std::endl;
+    
     return 0;
 }
 

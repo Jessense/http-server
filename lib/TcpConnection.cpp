@@ -14,8 +14,8 @@ TcpConnection::TcpConnection(int connectFd_, EventLoop* eventLoop_, MessageCallb
       outputBuffer(new Buffer()),
       channel(new Channel(connectFd_, EPOLLIN, eventLoop, handleRead, handleWrite, this))
 {
-    std::cout << "inputBuffer=" << inputBuffer <<std::endl;
-    std::cout << "outputBuffer=" << outputBuffer <<std::endl;
+    std::cout << eventLoop->getTid() << " : " << channel->fd << " : " << "inputBuffer  = " << inputBuffer <<std::endl;
+    std::cout << eventLoop->getTid() << " : " << channel->fd << " : " << "outputBuffer = " << outputBuffer <<std::endl;
 }
 
 
@@ -40,8 +40,9 @@ int handleRead(void *data)
     TcpConnection* tcpConnection = static_cast<TcpConnection*>(data);
     Buffer* inputBuffer = tcpConnection->inputBuffer;
     Channel* channel = tcpConnection->channel;
-
+    std::cout << tcpConnection->eventLoop->getTid() << " : " << tcpConnection->channel->fd << " : " << "handling read" << std::endl;
     int nread = inputBuffer->readSocket(channel->fd);
+    std::cout << tcpConnection->eventLoop->getTid() << " : " << tcpConnection->channel->fd << " : " << "handling read, nread=" << nread << std::endl;
     if (nread > 0)
     {
         if (tcpConnection->messageCallback != NULL)
@@ -67,7 +68,7 @@ int handleWrite(void *data)
     if (nwrote > 0)
     {
         outputBuffer->readIndex += nwrote;
-        if (outputBuffer->readableSize() == 0)
+        if (outputBuffer->readableSize() == 0 && channel->writeEnabled())
         {
             channel->disableWrite();
         } else if (!channel->writeEnabled() && outputBuffer->readableSize() > 0) //如果未发送完

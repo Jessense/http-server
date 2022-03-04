@@ -8,11 +8,12 @@
 const char *CRLF = "\r\n";
 
 Buffer::Buffer()
+    : data(new char[kInitBufferSize]),
+      totalSize(kInitBufferSize),
+      readIndex(0),
+      writeIndex(0)
 {
-    data = (char*)malloc(kInitBufferSize);
-    totalSize = kInitBufferSize;
-    readIndex = 0;
-    writeIndex = 0;
+    std::cout << "buffer initialized: " << this << std::endl;
 }
 
 Buffer::~Buffer()

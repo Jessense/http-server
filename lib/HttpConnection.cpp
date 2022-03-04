@@ -36,12 +36,12 @@ int HttpConnection::decodeRequest()
         {
             while (true)
             {
-                int pos1 = s.find(":", crlf+1);
+                int pos1 = s.find(":", crlf+2);
                 if (pos1 == std::string::npos)
                     break;
-                std::string key = s.substr(crlf+1, pos1-crlf-1);
-                crlf = s.find("\r\n", pos1+1);
-                std::string value = s.substr(pos1+1, crlf-pos1-1);
+                std::string key = s.substr(crlf+2, pos1-crlf-2);
+                crlf = s.find("\r\n", pos1+2);
+                std::string value = s.substr(pos1+2, crlf-pos1-2);
                 httpRequest->requestHeaders[key] = value;
             }
             
@@ -56,7 +56,7 @@ int HttpConnection::encodeResponse()
     std::string statusLine = "HTTP/1.1 " + std::to_string(httpResponse->statusCode) 
         + " " + httpResponse->statusMessage + "\r\n";
     outputBuffer->appendString(statusLine);
-    if (httpResponse->keepConnected)
+    if (!httpResponse->keepAlive)
     {
         outputBuffer->appendString("Connection: close\r\n");
     }

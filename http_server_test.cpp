@@ -22,7 +22,6 @@ int onRequest(HttpRequest* request, HttpResponse* response)
     {
         response->statusCode = NotFound;
         response->statusMessage = "NotFound";
-        response->keepConnected = true;
     }
     return 0;
     

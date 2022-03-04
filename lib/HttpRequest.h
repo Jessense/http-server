@@ -20,7 +20,9 @@ public:
     std::string url;
     HttpRequestState currentState;
     std::map<std::string, std::string> requestHeaders;
-    int requestHeadersNum;
+public:
+    void reset();
+    bool keepAlive();
 };
 
 

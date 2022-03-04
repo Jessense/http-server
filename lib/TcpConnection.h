@@ -13,11 +13,10 @@ class TcpConnection
 {
 public:
     EventLoop* eventLoop;
-    Channel* channel;
     Buffer* inputBuffer;
     Buffer* outputBuffer;
     MessageCallback messageCallback;
-
+    Channel* channel;
 
 
 public:

@@ -23,15 +23,21 @@ int onMessage(TcpConnection* tcpConnection)
     assert(tcpConnection->eventLoop->getTid() == std::this_thread::get_id());
     HttpConnection* httpConnection = static_cast<HttpConnection*>(tcpConnection);
     httpConnection->decodeRequest();
-    std::cout << httpConnection->eventLoop->getTid() << " : " << httpConnection->channel->fd << " : " << "decoded" << std::endl;
+    httpConnection->httpResponse->keepAlive = httpConnection->httpRequest->keepAlive();
     if (httpConnection->httpRequest->currentState != REQUEST_DONE)
         return 0;
     httpConnection->httpServer->requestCallback(httpConnection->httpRequest, httpConnection->httpResponse);
-    std::cout << httpConnection->eventLoop->getTid() << " : " << httpConnection->channel->fd << " : " << "after request callback" << std::endl;
+    // std::cout << httpConnection->eventLoop->getTid() << " : " << httpConnection->channel->fd << " : " << "after request callback" << std::endl;
     httpConnection->encodeResponse();
-    std::cout << httpConnection->eventLoop->getTid() << " : " << httpConnection->channel->fd << " : " << "encoded" << std::endl;
+    // std::cout << httpConnection->eventLoop->getTid() << " : " << httpConnection->channel->fd << " : " << "encoded" << std::endl;
     httpConnection->send();
-    std::cout << httpConnection->eventLoop->getTid() << " : " << httpConnection->channel->fd << " : " << "sent" << std::endl;
-    // httpConnection->close(); //TODO: 处理连接关闭，当 request header 中有 Connnection:close 时关闭
+    std::cout << httpConnection->eventLoop->getTid() << " : " << httpConnection->channel->fd << " : " << httpConnection->httpRequest->method << " " << httpConnection->httpRequest->url << std::endl;
+    
+    httpConnection->httpRequest->reset(); // reset for next request under keep alive
+    httpConnection->httpResponse->reset();
+    
+    if (!httpConnection->httpResponse->keepAlive)
+        httpConnection->close(); //TODO: 处理连接关闭，当 request header 中有 Connnection:close 时关闭
+
     return 0;
 }

@@ -22,9 +22,10 @@ public:
     std::string contentType;
     std::string body;
     std::map<std::string, std::string> responseHeaders;
-    int responseHeadersNum;
-    bool keepConnected;
-
+    bool keepAlive;
+public:
+    HttpResponse();
+    void reset();
 };
 
 

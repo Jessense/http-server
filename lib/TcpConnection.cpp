@@ -14,8 +14,6 @@ TcpConnection::TcpConnection(int connectFd_, EventLoop* eventLoop_, MessageCallb
       outputBuffer(new Buffer()),
       channel(new Channel(connectFd_, EPOLLIN, eventLoop, handleRead, handleWrite, this))
 {
-    std::cout << eventLoop->getTid() << " : " << channel->fd << " : " << "inputBuffer  = " << inputBuffer <<std::endl;
-    std::cout << eventLoop->getTid() << " : " << channel->fd << " : " << "outputBuffer = " << outputBuffer <<std::endl;
 }
 
 
@@ -40,14 +38,16 @@ int handleRead(void *data)
     TcpConnection* tcpConnection = static_cast<TcpConnection*>(data);
     Buffer* inputBuffer = tcpConnection->inputBuffer;
     Channel* channel = tcpConnection->channel;
-    std::cout << tcpConnection->eventLoop->getTid() << " : " << tcpConnection->channel->fd << " : " << "handling read" << std::endl;
+    // std::cout << tcpConnection->eventLoop->getTid() << " : " << tcpConnection->channel->fd << " : " << "handling read" << std::endl;
     int nread = inputBuffer->readSocket(channel->fd);
-    std::cout << tcpConnection->eventLoop->getTid() << " : " << tcpConnection->channel->fd << " : " << "handling read, nread=" << nread << std::endl;
+    // std::cout << tcpConnection->eventLoop->getTid() << " : " << tcpConnection->channel->fd << " : " 
+    //         << "handling read, nread=" << nread << ", readIndex=" << inputBuffer->readIndex << ", writeIndex=" << inputBuffer->writeIndex << std::endl;
     if (nread > 0)
     {
         if (tcpConnection->messageCallback != NULL)
         {
             tcpConnection->messageCallback(tcpConnection);
+            inputBuffer->readIndex = inputBuffer->writeIndex;
         }
     }
     else
@@ -86,6 +86,8 @@ int handleWrite(void *data)
             }
         }
     }
+    // std::cout << tcpConnection->eventLoop->getTid() << " : " << tcpConnection->channel->fd << " : " 
+    //     << "handling write, nwrote=" << nwrote << "readIndex=" << outputBuffer->readIndex << ", writeIndex=" << outputBuffer->writeIndex << std::endl;
     return nwrote;    
 
 }

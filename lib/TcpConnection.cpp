@@ -19,6 +19,21 @@ TcpConnection::TcpConnection(int connectFd_, EventLoop* eventLoop_, MessageCallb
 
 TcpConnection::~TcpConnection()
 {
+    channel->deregister();
+    int err = close(channel->fd);
+    if (err == 0) {
+        std::cout << "closed " << channel->fd << std::endl;
+    } else {
+        std::cout << "failed to close " << channel->fd << ", err=" << err << std::endl;
+    }
+    delete channel;
+
+    delete inputBuffer;
+    delete outputBuffer;
+    
+    // shutdown(channel->fd, SHUT_WR);
+
+    std::cout << "~TcpConnection()" << std::endl;
 }
 
 int TcpConnection::send()
@@ -26,11 +41,6 @@ int TcpConnection::send()
     return handleWrite(this);
 }
 
-int TcpConnection::close()
-{
-    channel->deregister();
-    return shutdown(channel->fd, SHUT_WR);
-}
 
 
 int handleRead(void *data)
@@ -50,9 +60,9 @@ int handleRead(void *data)
             inputBuffer->readIndex = inputBuffer->writeIndex;
         }
     }
-    else
+    else //TODO
     {
-        tcpConnection->close();
+        delete tcpConnection;
     }
 
     return nread;

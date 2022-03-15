@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <assert.h>
+#include <unistd.h>
 
 EPoller::EPoller(EventLoop* loop)
     : ownerLoop(loop),
@@ -14,6 +15,7 @@ EPoller::EPoller(EventLoop* loop)
 
 EPoller::~EPoller()
 {
+    close(epfd);
 }
 
 void EPoller::poll(int timeoutMs)

@@ -10,6 +10,11 @@ HttpServer::HttpServer(int port, RequestCallback requestCallback_, int threadNum
 {
 
 }
+
+HttpServer::~HttpServer()
+{
+    std::cout << "~HttpServer()" << std::endl;
+}
       
 TcpConnection* HttpServer::createConnection(int connectFd, EventLoop* subLoop)
 {
@@ -27,9 +32,7 @@ int onMessage(TcpConnection* tcpConnection)
     if (httpConnection->httpRequest->currentState != REQUEST_DONE)
         return 0;
     httpConnection->httpServer->requestCallback(httpConnection->httpRequest, httpConnection->httpResponse);
-    // std::cout << httpConnection->eventLoop->getTid() << " : " << httpConnection->channel->fd << " : " << "after request callback" << std::endl;
     httpConnection->encodeResponse();
-    // std::cout << httpConnection->eventLoop->getTid() << " : " << httpConnection->channel->fd << " : " << "encoded" << std::endl;
     httpConnection->send();
     std::cout << httpConnection->eventLoop->getTid() << " : " << httpConnection->channel->fd << " : " << httpConnection->httpRequest->method << " " << httpConnection->httpRequest->url << std::endl;
     
@@ -37,7 +40,7 @@ int onMessage(TcpConnection* tcpConnection)
     httpConnection->httpResponse->reset();
     
     if (!httpConnection->httpResponse->keepAlive)
-        httpConnection->close(); //TODO: 处理连接关闭，当 request header 中有 Connnection:close 时关闭
+        delete httpConnection; //TODO: 处理连接关闭，当 request header 中有 Connnection:close 时关闭
 
     return 0;
 }

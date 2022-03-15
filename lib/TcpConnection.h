@@ -22,9 +22,8 @@ public:
 public:
     TcpConnection(int connectFd, EventLoop* eventLoop, MessageCallback messageCallback);
     TcpConnection(){};
-    ~TcpConnection();
+    virtual ~TcpConnection();
     int send();
-    int close();
 };
 
 int handleRead(void *data);

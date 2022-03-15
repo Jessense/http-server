@@ -16,14 +16,13 @@ public:
     MessageCallback messageCallback;
 public:
     TcpServer(int port_, MessageCallback messageCallback_, int threadNum_=0);
-    ~TcpServer();
+    virtual ~TcpServer();
     void start();
     virtual TcpConnection* createConnection(int connectFd, EventLoop* subLoop);
 
 };
 
 int handleConnectionEstablished(void* data);
-int handleConnectionClosed(void* data);
 
 
 #endif

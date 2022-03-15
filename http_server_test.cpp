@@ -29,7 +29,7 @@ int onRequest(HttpRequest* request, HttpResponse* response)
 
 int main(int argc, char const *argv[])
 {
-    HttpServer* httpServer = new HttpServer(43211, onRequest, 5);
-    httpServer->start();
+    HttpServer httpServer(43211, onRequest, 5);
+    httpServer.start();
     return 0;
 }

@@ -16,7 +16,6 @@ Channel::Channel(int fd_, int events_, EventLoop* loop, EventReadCallback readCa
 
 Channel::~Channel()
 {
-    std::cout << "~Channel()" << std::endl;
 }
 
 

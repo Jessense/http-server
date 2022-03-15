@@ -20,6 +20,18 @@ TcpServer::TcpServer(int port_, MessageCallback messageCallback_,int threadNum_)
 
 TcpServer::~TcpServer()
 {
+    int err = close(acceptor->listen_fd);
+    if (err == 0) {
+        std::cout << "closed " << acceptor->listen_fd << std::endl;
+    } else {
+        std::cout << "failed to close " << acceptor->listen_fd << ", err=" << err << std::endl;
+    }
+    delete acceptor;
+    
+    /* TODO 如何释放线程池和 eventLoop */
+
+
+    std::cout << "~TcpServer()" << std::endl;
 }
 
 
@@ -60,9 +72,3 @@ int handleConnectionEstablished(void* data)
     return 0;
 }
 
-int handleConnectionClosed(void* data)
-{
-    Channel* channel = (Channel*)data;
-    channel->ownerLoop->removeChannel(channel);
-    return 0;
-}

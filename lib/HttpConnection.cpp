@@ -15,6 +15,15 @@ HttpConnection::HttpConnection(int connectFd_, EventLoop* eventLoop_, MessageCal
     // channel = new Channel(connectFd_, EPOLLIN, eventLoop, handleRead, handleWrite, this);
 }
 
+HttpConnection::~HttpConnection()
+{
+    delete httpRequest;
+    delete httpResponse;
+    std::cout << "~HttpConnection()" << std::endl;
+}
+
+
+
 int HttpConnection::decodeRequest()
 {
     int ok = 1; // TODO：错误处理
@@ -32,7 +41,7 @@ int HttpConnection::decodeRequest()
             httpRequest->version = s.substr(pos2+1, crlf-pos2-1);
             httpRequest->currentState = REQUEST_HEADERS;
         }
-        else if (httpRequest->currentState == REQUEST_HEADERS)
+        else if (httpRequest->currentState == REQUEST_HEADERS) //header中分号后要加一个空格
         {
             while (true)
             {
@@ -56,14 +65,14 @@ int HttpConnection::encodeResponse()
     std::string statusLine = "HTTP/1.1 " + std::to_string(httpResponse->statusCode) 
         + " " + httpResponse->statusMessage + "\r\n";
     outputBuffer->appendString(statusLine);
+    std::string contentLen = std::to_string(httpResponse->body.size());
+    outputBuffer->appendString("Content-Length: " + contentLen + "\r\n");    
     if (!httpResponse->keepAlive)
     {
         outputBuffer->appendString("Connection: close\r\n");
     }
     else
     {
-        std::string contentLen = std::to_string(httpResponse->body.size());
-        outputBuffer->appendString("Content-Length: " + contentLen + "\r\n");
         outputBuffer->appendString("Connection: Keep-Alive\r\n");
     }
 

@@ -8,18 +8,16 @@ HttpConnection::HttpConnection(int connectFd_, EventLoop* eventLoop_, MessageCal
       httpRequest(new HttpRequest()),
       httpResponse(new HttpResponse())
 {
-    // eventLoop = eventLoop_;
-    // messageCallback = messageCallback_;
-    // inputBuffer = new Buffer();
-    // outputBuffer = new Buffer();
-    // channel = new Channel(connectFd_, EPOLLIN, eventLoop, handleRead, handleWrite, this);
+
 }
 
 HttpConnection::~HttpConnection()
 {
     delete httpRequest;
     delete httpResponse;
-    std::cout << "~HttpConnection()" << std::endl;
+    httpRequest = nullptr;
+    httpResponse = nullptr;
+    // std::cout << "~HttpConnection()" << std::endl;
 }
 
 
@@ -29,6 +27,7 @@ int HttpConnection::decodeRequest()
     int ok = 1; // TODO：错误处理
     int crlf = 0;
     std::string s(inputBuffer->dataBegin(), inputBuffer->readableSize());
+    
     while (httpRequest->currentState != REQUEST_DONE)
     {
         if (httpRequest->currentState == REQUEST_STATUS)

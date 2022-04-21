@@ -5,6 +5,7 @@
 
 typedef int (*EventReadCallback)(void *data);
 typedef int (*EventWriteCallback)(void *data);
+typedef int (*EventCloseCallback)(void *data);
 
 class EventLoop;
 
@@ -16,9 +17,10 @@ public:
     EventLoop* ownerLoop;
     EventReadCallback readCallback;
     EventWriteCallback writeCallback;
+    EventCloseCallback closeCallback;
     void *data;
 public:
-    Channel(int fd_, int events_, EventLoop* loop, EventReadCallback readCallback, EventWriteCallback writeCallback, void* data);
+    Channel(int fd_, int events_, EventLoop* loop, EventReadCallback readCallback, EventWriteCallback writeCallback, EventCloseCallback closeCallback, void* data);
     ~Channel();
     void handleEvent();
     void enableRead();

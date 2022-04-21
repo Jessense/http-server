@@ -9,19 +9,19 @@ int onRequest(HttpRequest* request, HttpResponse* response)
         response->statusCode = OK;
         response->statusMessage = "OK";
         response->contentType = "text/html";
-        response->body = "<html><head><title>This is homepage</title></head><body><h1>This is homepage</h1></body></html>";
+        response->body = "<html><head><title>This is homepage</title></head><body><h1>Hello World!</h1></body></html>\n";
     }
     else if (path == "/hello")
     {
         response->statusCode = OK;
         response->statusMessage = "OK";
         response->contentType = "text/plain";        
-        response->body = "Hello World!";
+        response->body = "Hello World!\n";
     }
     else
     {
         response->statusCode = NotFound;
-        response->statusMessage = "NotFound";
+        response->statusMessage = "NotFound\n";
     }
     return 0;
     
@@ -29,7 +29,7 @@ int onRequest(HttpRequest* request, HttpResponse* response)
 
 int main(int argc, char const *argv[])
 {
-    HttpServer httpServer(43211, onRequest, 5);
+    HttpServer httpServer(43211, onRequest, 6);
     httpServer.start();
     return 0;
 }

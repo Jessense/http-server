@@ -25,17 +25,26 @@ void EPoller::poll(int timeoutMs)
     {
         for (int i = 0; i < numEvents; i++) {
             int fd = revents[i].data.fd;
+            if (channelMap.find(fd) == channelMap.end()) {
+                // std::cout << ownerLoop->getTid() << " : " << fd << " : channel not found" << std::endl;
+                continue;
+            }
             Channel* channel = channelMap[fd];
             assert(channel->fd == fd);
             if ((revents[i].events & EPOLLERR) || (revents[i].events & EPOLLHUP))
             {
-                std::cout << "epoll error" << std::endl;
-                continue;
+                // std::cout << ownerLoop->getTid() << " : " << channel->fd << " : EPOLLERR | EPOLLHUP" << std::endl;
+                if (channel && channel->closeCallback && channel->data)
+                channel->closeCallback(channel->data);
             }
             if (revents[i].events & EPOLLIN) {
+                // std::cout << ownerLoop->getTid() << " : " << channel->fd << " : EPOLLIN" << std::endl;
+                if (channel && channel->readCallback &&  channel->data)
                 channel->readCallback(channel->data);
             }
             if (revents[i].events & EPOLLOUT) {
+                // std::cout << ownerLoop->getTid() << " : " << channel->fd << " : EPOLLOUT" << std::endl;
+                if (channel && channel->writeCallback && channel->data)
                 channel->writeCallback(channel->data);
             }
         }
@@ -65,6 +74,7 @@ void EPoller::modifyChannel(Channel* channel)
 
 void EPoller::removeFd(int fd)
 {
+    int err = epoll_ctl(epfd, EPOLL_CTL_DEL, fd, NULL);
     channelMap.erase(fd);
-    epoll_ctl(epfd, EPOLL_CTL_DEL, fd, NULL);
+
 }

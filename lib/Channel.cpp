@@ -3,12 +3,13 @@
 #include <iostream>
 
 Channel::Channel(int fd_, int events_, EventLoop* loop, EventReadCallback readCallback_, 
-    EventWriteCallback writeCallback_, void* data_)
+    EventWriteCallback writeCallback_, EventCloseCallback closeCallback_, void* data_)
     : fd(fd_),
       events(events_),
       ownerLoop(loop),
       readCallback(readCallback_),
       writeCallback(writeCallback_),
+      closeCallback(closeCallback_),
       data(data_)
 {
     ownerLoop->addChannel(this);
@@ -16,9 +17,9 @@ Channel::Channel(int fd_, int events_, EventLoop* loop, EventReadCallback readCa
 
 Channel::~Channel()
 {
+    data = nullptr;
+    deregister(); //这一步好像无法成功把 channel 从 channelMap 中删除
 }
-
-
 
 void Channel::enableRead()
 {

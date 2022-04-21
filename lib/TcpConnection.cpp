@@ -6,34 +6,36 @@
 #include <iostream>
 #include <unistd.h>
 #include <sys/socket.h>
+#include <sys/uio.h>
 
 TcpConnection::TcpConnection(int connectFd_, EventLoop* eventLoop_, MessageCallback messageCallback_)
     : eventLoop(eventLoop_), 
       messageCallback(messageCallback_),
       inputBuffer(new Buffer()),
       outputBuffer(new Buffer()),
-      channel(new Channel(connectFd_, EPOLLIN, eventLoop, handleRead, handleWrite, this))
+      channel(new Channel(connectFd_, EPOLLIN, eventLoop, handleRead, handleWrite, handleClose, this))
 {
 }
 
 
 TcpConnection::~TcpConnection()
 {
-    channel->deregister();
-    int err = close(channel->fd);
-    if (err == 0) {
-        std::cout << "closed " << channel->fd << std::endl;
-    } else {
-        std::cout << "failed to close " << channel->fd << ", err=" << err << std::endl;
-    }
+    int fd = channel->fd;
     delete channel;
-
-    delete inputBuffer;
-    delete outputBuffer;
+    channel = nullptr;
+    int err = close(fd);
+    // if (err == 0) {
+    //     std::cout << "closed " << fd << std::endl;
+    // } else {
+    //     std::cout << "failed to close " << fd << ", err=" << err << std::endl;
+    // }
     
-    // shutdown(channel->fd, SHUT_WR);
-
-    std::cout << "~TcpConnection()" << std::endl;
+    delete inputBuffer;
+    inputBuffer = nullptr;
+    delete outputBuffer;
+    outputBuffer = nullptr;
+    
+    
 }
 
 int TcpConnection::send()
@@ -48,33 +50,72 @@ int handleRead(void *data)
     TcpConnection* tcpConnection = static_cast<TcpConnection*>(data);
     Buffer* inputBuffer = tcpConnection->inputBuffer;
     Channel* channel = tcpConnection->channel;
-    // std::cout << tcpConnection->eventLoop->getTid() << " : " << tcpConnection->channel->fd << " : " << "handling read" << std::endl;
-    int nread = inputBuffer->readSocket(channel->fd);
-    // std::cout << tcpConnection->eventLoop->getTid() << " : " << tcpConnection->channel->fd << " : " 
-    //         << "handling read, nread=" << nread << ", readIndex=" << inputBuffer->readIndex << ", writeIndex=" << inputBuffer->writeIndex << std::endl;
-    if (nread > 0)
-    {
-        if (tcpConnection->messageCallback != NULL)
-        {
-            tcpConnection->messageCallback(tcpConnection);
-            inputBuffer->readIndex = inputBuffer->writeIndex;
-        }
-    }
-    else //TODO
-    {
-        delete tcpConnection;
-    }
 
-    return nread;
+    char *additionalBuffer = new char[Buffer::kInitBufferSize];
+    
+    while (true)
+    {
+        iovec vec[2];
+        int writeable = inputBuffer->writeableSize();
+        vec[0].iov_base = inputBuffer->data + inputBuffer->writeIndex;
+        vec[0].iov_len = writeable;
+        vec[1].iov_base = additionalBuffer;
+        vec[1].iov_len = sizeof(additionalBuffer);
+        int nread = readv(channel->fd, vec, 2);
+        // std::cout << tcpConnection->eventLoop->getTid() << " : " << tcpConnection->channel->fd << " : " 
+        //             << "nread=" << nread << std::endl;         
+        if (nread == 0) // peer FIN
+        {
+            // std::cout << tcpConnection->eventLoop->getTid() << " : " << tcpConnection->channel->fd << " : " 
+            //             << "FIN" << std::endl;        
+            delete tcpConnection;
+            tcpConnection = nullptr;
+            break;
+        }
+        else if (nread < 0)
+        {
+            if (errno == EWOULDBLOCK) { // 读完了
+                if (tcpConnection->messageCallback != NULL)
+                {
+                    tcpConnection->messageCallback(tcpConnection);
+                    inputBuffer->readIndex = inputBuffer->writeIndex;
+                }                
+                break;
+            } else {
+                std::cout << tcpConnection->eventLoop->getTid() << " : " << tcpConnection->channel->fd << " : " 
+                            << "read error" << std::endl;   
+                delete tcpConnection;
+                tcpConnection = nullptr;
+                break; 
+            }
+        }
+        else if (nread <= writeable)
+        {
+            inputBuffer->writeIndex += nread;
+        }
+        else
+        {
+            inputBuffer->writeIndex = inputBuffer->totalSize;
+            inputBuffer->append(additionalBuffer, nread-writeable);
+        }    
+    }
+    delete[] additionalBuffer;
+    additionalBuffer = nullptr;
+    return 0;
 }
 
 int handleWrite(void *data)
 {
     TcpConnection* tcpConnection = (TcpConnection*)data;
+    if (tcpConnection == nullptr) {
+        return 0;
+    }    
     Buffer* outputBuffer = tcpConnection->outputBuffer;
     Channel* channel = tcpConnection->channel;
 
     int nwrote = write(channel->fd, outputBuffer->dataBegin(), outputBuffer->readableSize());
+    // std::cout << tcpConnection->eventLoop->getTid() << " : " << tcpConnection->channel->fd << " : " 
+    //             << "nwrote=" << nwrote << std::endl;      
     if (nwrote > 0)
     {
         outputBuffer->readIndex += nwrote;
@@ -93,13 +134,27 @@ int handleWrite(void *data)
             if (errno == EPIPE || errno == ECONNRESET) //TODO
             {
                 std::cout << "write error" << std::endl;
+                delete tcpConnection;
+                tcpConnection = nullptr;
             }
         }
+        // std::cout << tcpConnection->eventLoop->getTid() << " : " << tcpConnection->channel->fd << " : " 
+        //     << "handling write, nwrote=" << nwrote  << std::endl;        
+
     }
     // std::cout << tcpConnection->eventLoop->getTid() << " : " << tcpConnection->channel->fd << " : " 
-    //     << "handling write, nwrote=" << nwrote << "readIndex=" << outputBuffer->readIndex << ", writeIndex=" << outputBuffer->writeIndex << std::endl;
+    //     << "handling write, nwrote=" << nwrote  << std::endl;
     return nwrote;    
 
+}
+
+int handleClose(void *data)
+{
+    TcpConnection* tcpConnection = (TcpConnection*)data;
+    // tcpConnection->channel->data = nullptr;
+    delete tcpConnection;
+    tcpConnection = nullptr;
+    return 0;
 }
 
 

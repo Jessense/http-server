@@ -11,7 +11,7 @@ public:
     int writeIndex;
     int totalSize;
 public:
-    static const int kInitBufferSize = 65536;
+    static const int kInitBufferSize = 5000;
     Buffer();
     ~Buffer();
     char* dataBegin() {return data + readIndex;};

@@ -22,23 +22,23 @@ TcpServer::~TcpServer()
 {
     int err = close(acceptor->listen_fd);
     if (err == 0) {
-        std::cout << "closed " << acceptor->listen_fd << std::endl;
+        // std::cout << "closed " << acceptor->listen_fd << std::endl;
     } else {
         std::cout << "failed to close " << acceptor->listen_fd << ", err=" << err << std::endl;
     }
     delete acceptor;
-    
+    acceptor = nullptr;
     /* TODO 如何释放线程池和 eventLoop */
 
 
-    std::cout << "~TcpServer()" << std::endl;
+    // std::cout << "~TcpServer()" << std::endl;
 }
 
 
 
 TcpConnection* TcpServer::createConnection(int connectFd, EventLoop* subLoop)
 {
-    std::cout << subLoop->getTid() << " : " << connectFd << " : new tcp connection" << std::endl;
+    // std::cout << subLoop->getTid() << " : " << connectFd << " : new tcp connection" << std::endl;
     TcpConnection *tcpConnection = new TcpConnection(connectFd, subLoop, this->messageCallback);
     return tcpConnection;
 }
@@ -48,7 +48,7 @@ void TcpServer::start()
     threadPool->start();
 
     std::cout << "listen fd = " << acceptor->listen_fd << std::endl;
-    Channel* channel = new Channel(acceptor->listen_fd, EPOLLIN, eventLoop, handleConnectionEstablished, NULL, this);
+    Channel* channel = new Channel(acceptor->listen_fd, EPOLLIN, eventLoop, handleConnectionEstablished, NULL, NULL, this);
     eventLoop->loop();
 }
 

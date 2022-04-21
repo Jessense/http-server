@@ -28,6 +28,6 @@ public:
 
 int handleRead(void *data);
 int handleWrite(void *data);
-
+int handleClose(void *data);
 
 #endif

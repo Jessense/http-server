@@ -17,7 +17,8 @@ Buffer::Buffer()
 
 Buffer::~Buffer()
 {
-    delete data;
+    delete[] data;
+    data = nullptr;
 }
 
 void Buffer::makeRoom(int size)
@@ -74,27 +75,30 @@ int Buffer::appendChar(char c)
 int Buffer::readSocket(int fd)
 {
     char *additionalBuffer = new char[kInitBufferSize];
+
     iovec vec[2];
     int writeable = writeableSize();
     vec[0].iov_base = data + writeIndex;
     vec[0].iov_len = writeable;
     vec[1].iov_base = additionalBuffer;
     vec[1].iov_len = sizeof(additionalBuffer);
-    int wrote = readv(fd, vec, 2);
-    if (wrote < 0)
+    int nread = readv(fd, vec, 2);
+    if (nread <= 0)
     {
-        return -1;
+        return nread;
     }
-    else if (wrote <= writeable)
+    else if (nread <= writeable)
     {
-        writeIndex += wrote;
+        writeIndex += nread;
     }
     else
     {
         writeIndex = totalSize;
-        append(additionalBuffer, wrote-writeable);
+        append(additionalBuffer, nread-writeable);
     }
-    return wrote;
+    delete[] additionalBuffer;
+    additionalBuffer = nullptr;
+    return nread;
 }
 
 char* Buffer::findCRLF()

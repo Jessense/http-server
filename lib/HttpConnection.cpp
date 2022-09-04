@@ -26,6 +26,7 @@ int HttpConnection::decodeRequest()
 {
     int ok = 1; // TODO：错误处理
     int crlf = 0;
+    bool post = false;
     std::string s(inputBuffer->dataBegin(), inputBuffer->readableSize());
     
     while (httpRequest->currentState != REQUEST_DONE)
@@ -35,6 +36,9 @@ int HttpConnection::decodeRequest()
             crlf = s.find("\r\n");
             int pos1 = s.find(" ");
             httpRequest->method = s.substr(0, pos1);
+            if (httpRequest->method == "POST") {
+                post = true;
+            }
             int pos2 = s.find(" ", pos1+1);
             httpRequest->url = s.substr(pos1+1, pos2-pos1-1);
             httpRequest->version = s.substr(pos2+1, crlf-pos2-1);
@@ -53,6 +57,13 @@ int HttpConnection::decodeRequest()
                 httpRequest->requestHeaders[key] = value;
             }
             
+            httpRequest->currentState = REQUEST_BODY;
+        }
+        else if (httpRequest->currentState == REQUEST_BODY)
+        {
+            if (post) {
+                httpRequest->body = s.substr(crlf + 4, std::stoi(httpRequest->requestHeaders["Content-Length"]));
+            }
             httpRequest->currentState = REQUEST_DONE;
         }
     }

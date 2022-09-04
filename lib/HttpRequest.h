@@ -20,6 +20,8 @@ public:
     std::string url;
     HttpRequestState currentState;
     std::map<std::string, std::string> requestHeaders;
+    std::string body;
+    std::map<std::string, std::string> form;
 public:
     void reset();
     bool keepAlive();

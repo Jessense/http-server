@@ -4,6 +4,8 @@
 #include "ThreadPool.h"
 #include "Acceptor.h"
 #include "TcpConnection.h"
+#include "WorkerThreadPool.h"
+#include "Logger.h"
 
 class TcpServer
 {
@@ -13,7 +15,9 @@ public:
     Acceptor* acceptor;
     int threadNum;
     ThreadPool* threadPool;
+    WorkerThreadPool* workerThreadPool;
     MessageCallback messageCallback;
+    Logger* logger;
 public:
     TcpServer(int port_, MessageCallback messageCallback_, int threadNum_=0);
     virtual ~TcpServer();

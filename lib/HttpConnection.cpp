@@ -3,7 +3,7 @@
 #include <iostream>
 
 HttpConnection::HttpConnection(int connectFd_, EventLoop* eventLoop_, MessageCallback messageCallback_, HttpServer* httpServer_)
-    : TcpConnection(connectFd_, eventLoop_, messageCallback_),
+    : TcpConnection(connectFd_, eventLoop_, messageCallback_, httpServer_),
       httpServer(httpServer_),
       httpRequest(new HttpRequest()),
       httpResponse(new HttpResponse())

@@ -3,7 +3,7 @@
 
 #include "EventLoop.h"
 #include "Buffer.h"
-
+#include "FixedBuffer.h"
 class TcpServer;
 class TcpConnection;
 
@@ -17,10 +17,9 @@ public:
     Buffer* outputBuffer;
     MessageCallback messageCallback;
     Channel* channel;
-
-
+    TcpServer* tcpServer;
 public:
-    TcpConnection(int connectFd, EventLoop* eventLoop, MessageCallback messageCallback);
+    TcpConnection(int connectFd, EventLoop* eventLoop, MessageCallback messageCallback, TcpServer* tcpServer_);
     TcpConnection(){};
     virtual ~TcpConnection();
     int send();

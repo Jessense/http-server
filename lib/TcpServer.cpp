@@ -13,7 +13,9 @@ TcpServer::TcpServer(int port_, MessageCallback messageCallback_,int threadNum_)
       eventLoop(new EventLoop()),
       acceptor(new Acceptor(port_)),
       threadNum(threadNum_),
-      threadPool(new ThreadPool(eventLoop, threadNum))
+      threadPool(new ThreadPool(eventLoop, threadNum)),
+      workerThreadPool(new WorkerThreadPool()),
+      logger(new Logger())
 {
 }
 
@@ -39,7 +41,7 @@ TcpServer::~TcpServer()
 TcpConnection* TcpServer::createConnection(int connectFd, EventLoop* subLoop)
 {
     // std::cout << subLoop->getTid() << " : " << connectFd << " : new tcp connection" << std::endl;
-    TcpConnection *tcpConnection = new TcpConnection(connectFd, subLoop, this->messageCallback);
+    TcpConnection *tcpConnection = new TcpConnection(connectFd, subLoop, this->messageCallback, this);
     return tcpConnection;
 }
 

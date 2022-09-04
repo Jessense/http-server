@@ -8,12 +8,13 @@
 #include <sys/socket.h>
 #include <sys/uio.h>
 
-TcpConnection::TcpConnection(int connectFd_, EventLoop* eventLoop_, MessageCallback messageCallback_)
+TcpConnection::TcpConnection(int connectFd_, EventLoop* eventLoop_, MessageCallback messageCallback_, TcpServer* tcpServer_)
     : eventLoop(eventLoop_), 
       messageCallback(messageCallback_),
       inputBuffer(new Buffer()),
       outputBuffer(new Buffer()),
-      channel(new Channel(connectFd_, EPOLLIN, eventLoop, handleRead, handleWrite, handleClose, this))
+      channel(new Channel(connectFd_, EPOLLIN, eventLoop, handleRead, handleWrite, handleClose, this)),
+      tcpServer(tcpServer_)
 {
 }
 
@@ -77,7 +78,8 @@ int handleRead(void *data)
             if (errno == EWOULDBLOCK) { // 读完了
                 if (tcpConnection->messageCallback != NULL)
                 {
-                    tcpConnection->messageCallback(tcpConnection);
+                    auto future = tcpConnection->tcpServer->workerThreadPool->submit(tcpConnection->messageCallback, tcpConnection);
+                    future.get(); // TO REMOVE
                     inputBuffer->readIndex = inputBuffer->writeIndex;
                 }                
                 break;

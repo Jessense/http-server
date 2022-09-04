@@ -25,7 +25,6 @@ TcpConnection* HttpServer::createConnection(int connectFd, EventLoop* subLoop)
 
 int onMessage(TcpConnection* tcpConnection)
 {
-    assert(tcpConnection->eventLoop->getTid() == std::this_thread::get_id());
     HttpConnection* httpConnection = static_cast<HttpConnection*>(tcpConnection);
     // showBuffer(httpConnection->inputBuffer, tcpConnection->channel->fd);
     httpConnection->decodeRequest();
@@ -37,6 +36,9 @@ int onMessage(TcpConnection* tcpConnection)
         return 0;
     }
     
+    std::string temp(httpConnection->httpRequest->method + " " + httpConnection->httpRequest->url + "\n");
+    httpConnection->tcpServer->logger->append(temp.c_str(), temp.size());
+
     // std::cout << httpConnection->eventLoop->getTid() << " : " << httpConnection->channel->fd << " : " << httpConnection->httpRequest->method << " " << httpConnection->httpRequest->url << std::endl;    
     httpConnection->httpServer->requestCallback(httpConnection->httpRequest, httpConnection->httpResponse);
     httpConnection->encodeResponse();
